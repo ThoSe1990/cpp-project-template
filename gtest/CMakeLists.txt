@@ -5,9 +5,8 @@ find_package(GTest)
 if(GTest_FOUND)
 
   add_executable(${target} 
-    # add files here
+    ${CMAKE_CURRENT_SOURCE_DIR}/test.cc
   )
-  # link to targets from src here if needed
   target_link_libraries(${target} GTest::gtest_main)
 
 endif()
