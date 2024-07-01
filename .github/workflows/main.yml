@@ -1,0 +1,44 @@
+# the docker image is build for linux/amd64 and pushed to docker hub: 
+# docker buildx build --platform linux/amd64 . -t those90/ci-image:1.0
+# docker push those90/ci-image:1.0
+
+
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-gcc:
+    runs-on: ubuntu-latest
+    container: those90/ci-image:1.0
+    env:
+      HOME: /root
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v3
+      - name: build
+        run: |
+          conan install . -of ./build_gcc --build missing -pr gcc
+          cmake -S . -B ./build_gcc -DCMAKE_TOOLCHAIN_FILE=./build_gcc/conan_toolchain.cmake -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_COMPILER=gcc
+          cmake --build ./build_gcc -j12
+      - name: unittests
+        run: ./build_gcc/bin/unittests
+
+  build-clang:
+    runs-on: ubuntu-latest
+    container: those90/ci-image:1.0
+    env:
+      HOME: /root
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v3
+      - name: build
+        run: |
+          conan install . -of ./build_clang --build missing -pr clang
+          cmake -S . -B ./build_clang -DCMAKE_TOOLCHAIN_FILE=./build_clang/conan_toolchain.cmake -DCMAKE_CXX_COMPILER=clang++-17 -DCMAKE_C_COMPILER=clang-17
+          cmake --build ./build_clang -j12      
+      - name: unittests
+        run: ./build_clang/bin/unittests
+
